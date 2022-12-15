@@ -1,3 +1,4 @@
 # Python 3.8+ required
+# Reinforcement Learning ve görselleştirme için gerekli paketler
 numpy>=1.21.0
 pygame>=2.0.0
