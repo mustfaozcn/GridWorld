@@ -4,11 +4,11 @@
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![NumPy](https://img.shields.io/badge/numpy-1.21+-orange.svg)
 
-Bu proje, GridWorld ortamında farklı reinforcement learning algoritmalarını sıfırdan NumPy ile implement edip görselleştiriyor.
+Bu proje, GridWorld ortamında farklı reinforcement learning algoritmalarını sıfırdan NumPy ile implement eder ve görselleştirir. Her algoritma, derin öğrenme mimarilerinin reinforcement learning'de nasıl kullanıldığını gösterir.
 
-## Proje İçeriği
+## Algoritmalar
 
-Proje, şu algoritmaları içeriyor:
+Proje aşağıdaki algoritmaları içerir:
 
 - **Q-Learning** - Tabular Q-Learning, sinir ağı olmadan Q-tablosu kullanır
 - **DQN** - Deep Q-Network, MLP ile Q-değerlerini öğrenir
@@ -98,5 +98,15 @@ Her algoritmanın nasıl çalıştığını anlamak için ilgili `.md` dosyalar�
 ## Gereksinimler
 
 - Python 3.8+
-- NumPy
-- Pygame (görselleştirme için)
+- NumPy >= 1.21.0
+- Pygame >= 2.0.0 (görselleştirme için)
+
+## Lisans
+
+Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için `LICENSE` dosyasına bakınız.
+
+## Katkıda Bulunma
+
+Katkılarınız memnuniyetle karşılanır. Lütfen pull request gönderirken:
+- Kodunuzun mevcut standartlara uygun olduğundan emin olun
+- Yeni algoritmalar için ilgili görselleştirme ve dokümantasyon dosyalarını ekleyin

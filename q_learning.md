@@ -1,32 +1,38 @@
 # Q-Learning Nasıl Çalışır?
 
-Bu dosya, `q_learning.py` kodunun nasıl çalıştığını açıklıyor. DQN'den farklı olarak Q-Learning daha basit bir yaklaşım: sinir ağı yerine bir tablo kullanır.
+Bu doküman, `q_learning.py` dosyasındaki Q-Learning algoritmasının çalışma prensiplerini açıklar. DQN'den farklı olarak Q-Learning, sinir ağı yerine tablo tabanlı (tabular) bir yaklaşım kullanır.
 
-DQN'deki ajanımız "akıl yürüten" bir beyne (sinir ağı) sahipti. Buradaki ajanımız ise daha çok çalışkan bir öğrenci gibi; her şeyi bir **"kopya kağıdına" (Q-Tablosu)** yazarak ezberliyor. Gelin bu ajanın kopya kağıdını nasıl doldurduğunu inceleyelim.
+DQN, bir sinir ağı ile Q-değerlerini öğrenirken, Q-Learning her durum-eylem çifti için Q-değerlerini doğrudan bir tabloda saklar. Bu yaklaşım, küçük state space'lerde son derece etkilidir.
 
 ---
 
-## Q-Tablosu Nedir?
+## Q-Tablosu
 
-Bu ajanın beyni, `MLP` gibi karmaşık bir yapı değil. Sadece dev bir NumPy dizisi, yani bir tablo.
+Q-Tablosu, her durum-eylem çifti için beklenen toplam ödülü (Q-değeri) saklayan bir veri yapısıdır. NumPy dizisi olarak şu şekilde temsil edilir:
 
 ```python
 Q = np.full((env.h, env.w, 4), ...)
 ```
 
-Bu tablonun her bir hücresi, ajan için çok basit bir bilgiyi saklar:
-**"Eğer `(x, y)` konumundaysan ve `[eylem]` yaparsan, almayı beklediğin toplam puan budur."**
+Boyutlar:
+- `env.h × env.w`: GridWorld'ün her hücresi bir durumdur
+- `4`: Her durumda 4 olası eylem (yukarı, aşağı, sol, sağ)
 
--   **Katman veya Nöron Yok:** Ajan bir şey "hesaplamaz" veya "tahmin etmez".
--   **Doğrudan Bakar:** Karar vermek için, mevcut konumuna (`x, y`) karşılık gelen satırı tablodan bulur, 4 eylemin puanlarına bakar ve en yüksek puanlıyı seçer. Tıpkı bir çarpım tablosuna bakmak gibi.
+Tablonun her elemanı `Q[y, x, a]`, `(x, y)` konumunda `a` eylemini yapmanın beklenen toplam ödülünü ifade eder.
 
-Bu yüzden bu yönteme **Tabular (Tablosal) Q-Learning** denir.
+### Tabular Yaklaşımın Özellikleri
+
+- **Direkt Erişim:** Her durum-eylem çifti için bir değer saklanır, hesaplama yapılmaz
+- **Kesin Değerler:** Sinir ağı tahmini yerine, öğrenilen kesin değerler kullanılır
+- **Küçük State Space:** Sadece küçük ve ayrık state space'ler için uygundur
+
+Bu yaklaşım, **Tabular Q-Learning** olarak adlandırılır çünkü tüm Q-değerleri bir tabloda saklanır.
 
 ---
 
 ## Q-Tablosu Nasıl Öğrenir?
 
-Ajan, bu boş hesap tablosunu en doğru bilgilerle nasıl doldurur? İşte öğrenmenin kalbi olan o meşhur formül burada devreye giriyor:
+Q-tablosu, Bellman denklemi kullanılarak iteratif olarak güncellenir. Öğrenme sürecinin temeli:
 
 ```python
 Q[y, x, a] += alpha * td_error
@@ -34,43 +40,69 @@ Q[y, x, a] += alpha * td_error
 
 Bu formülü parçalara ayıralım:
 
--   `Q[y, x, a]`: Bu, kopya kağıdındaki değer. Yani, `(x, y)` konumunda `a` eylemini yapmanın "eski" puanı.
+-   **`Q[y, x, a]`:** Tablodaki mevcut değer, `(x, y)` konumunda `a` eylemini yapmanın öğrenilmiş Q-değeri
 -   `+=`: "Eski puanı, birazdan hesaplayacağımız yeni bilgiyle güncelle."
--   `alpha`: Bu bizim **öğrenme oranımız**. Sezgisel olarak, "yeni bilgiye ne kadar inanmalıyım?" sorusunun cevabıdır.
-    -   Eğer `alpha` küçükse, ajan tutucudur: "Bu yeni bilgi ilginç ama ben bildiğime şimdilik daha çok güveniyorum."
-    -   Eğer `alpha` büyükse, ajan heveslidir: "Vay canına, bu yeni bilgi harika! Eski bilgiyi büyük ölçüde bununla değiştireyim."
--   `td_error`: Bu, **"sürpriz faktörüdür"** (Temporal Difference Error). Ajanın beklentisi ile gerçeğin ne kadar farklı olduğudur.
+-   **`alpha` (Öğrenme Oranı):** Yeni bilgiye ne kadar güvenileceğini kontrol eder
+    - Küçük `alpha` (örn: 0.01): Yavaş ve tutucu öğrenme, eski bilgilere daha çok güven
+    - Büyük `alpha` (örn: 0.5): Hızlı öğrenme, yeni bilgilere daha çok önem
+-   **`td_error` (Temporal Difference Error):** Mevcut tahmin ile hedef arasındaki fark
 
-### Sürpriz Faktörü (`td_error`) Nasıl Hesaplanır?
+### Temporal Difference Error (TD Error)
 
-`td_error = td_target - Q[y, x, a]`
+TD error, mevcut Q-değeri tahmini ile gerçek değer arasındaki farktır:
 
--   `td_target`: Bu, ajanın o adımda ulaşmayı **umduğu ideal puandır**. Şöyle hesaplanır:
-    `r + gamma * np.max(Q[ny, nx, :])`
-    -   `r`: O adımı atınca **hemen kazandığı ödül** (ya -1 ya da +10).
-    -   `gamma`: Ajanın **sabırsızlık katsayısıdır**. Gelecekteki ödüllere ne kadar önem verdiğini belirler. 1'e ne kadar yakınsa, o kadar sabırlı ve ileri görüşlüdür.
-    -   `np.max(Q[ny, nx, :])`: Bu kısım, "attığım adımdan sonra geldiğim **yeni konumda**, kopya kağıdıma göre yapabileceğim **en iyi hamlenin puanı nedir?**" sorusunun cevabıdır.
+```
+td_error = td_target - Q[y, x, a]
+```
 
-**Özetle Öğrenme Süreci:**
+**TD Target Hesaplama:**
 
-1.  **Beklenti:** Ajan, kopya kağıdına bakar ve `(x, y)`'de `a` eylemini yapmanın puanının `Q[y, x, a]` olduğunu düşünür.
-2.  **Eylem ve Sonuç:** Eylemi yapar, `r` ödülünü alır ve yeni bir `(nx, ny)` konumuna gelir.
-3.  **Değerlendirme (Sürpriz):** Kendi kendine sorar: "Kazandığım anlık ödül (`r`) ile vardığım yeni yerdeki en iyi hamlenin potansiyelini (`gamma * max(Q)`) toplarsam, bu eylemin gerçek değeri ne olmalıydı?" Bu, onun `td_target`'ı olur.
-4.  **Güncelleme:** "Gerçek değer (`td_target`) ile benim eski tahminim (`Q[y, x, a]`) arasında ne kadar fark var?" Bu fark, onun "sürprizi" (`td_error`) olur. Kopya kağıdındaki eski değeri, bu sürprizin `alpha` kadarını ekleyerek günceller.
+TD target, Bellman denkleminden türetilir ve şu şekilde hesaplanır:
 
-Bu süreç binlerce kez tekrarlandığında, tablodaki değerler yavaş yavaş gerçeğe yakınsar ve ajan en iyi yolu ezberlemiş olur.
+```
+td_target = r + gamma * np.max(Q[ny, nx, :])
+```
+
+Bileşenler:
+- **`r`:** Anlık ödül (eylem sonrası alınan ödül, genellikle -1 veya +10)
+- **`gamma`:** Discount faktörü (0-1 arası). Gelecekteki ödüllere ne kadar önem verildiğini kontrol eder
+  - `gamma = 0.9`: Gelecekteki ödüllere yüksek önem
+  - `gamma = 0.1`: Sadece yakın ödüllere önem
+- **`np.max(Q[ny, nx, :])`:** Yeni konumda (`nx, ny`) tüm eylemler arasından en yüksek Q-değeri (optimal eylemin değeri)
+
+**Öğrenme Süreci:**
+
+1. **Mevcut Tahmin:** Ajan `Q[y, x, a]` değerini mevcut tahmin olarak kullanır
+2. **Eylem Gerçekleştirme:** `a` eylemi yapılır, `r` ödülü alınır ve yeni konum `(nx, ny)` elde edilir
+3. **Hedef Hesaplama:** Bellman denklemine göre, bu eylemin gerçek değeri `td_target` olmalıdır
+4. **Hata Hesaplama:** Mevcut tahmin ile hedef arasındaki fark (`td_error`) hesaplanır
+5. **Güncelleme:** Q-tablosu, öğrenme oranı (`alpha`) ile güncellenir: `Q[y, x, a] += alpha * td_error`
+
+Bu süreç binlerce iterasyon boyunca tekrarlandığında, Q-tablosundaki değerler optimal Q-değerlerine yakınsar ve ajan optimal politikayı öğrenir.
 
 ---
 
-## Keşif ve Kullanım Dengesi
+## Exploration-Exploitation Dengesi
 
-Eğer ajan her zaman sadece kopya kağıdındaki en yüksek puanlı eylemi seçerse, belki de daha iyi olan ama daha önce hiç denemediği bir yolu asla bulamaz.
+Q-Learning'de, ajan her zaman öğrendiği en iyi eylemi seçerse (exploitation), daha iyi alternatifleri keşfedemez (exploration). Bu sorunu çözmek için **epsilon-greedy** stratejisi kullanılır.
 
-İşte burada **epsilon (`ε`)** devreye girer. Epsilon, ajanın **"delilik" veya "merak" seviyesidir**.
+### Epsilon-Greedy Stratejisi
 
--   **`epsilon` olasılıkla (Örn: %10):** Ajan kopya kağıdını bir kenara atar ve "Bugün de bir delilik yapayım!" diyerek tamamen **rastgele** bir eylem seçer. Bu, yeni yollar **keşfetmesini** sağlar.
--   **`1-epsilon` olasılıkla (Örn: %90):** Ajan aklı başında davranır ve kopya kağıdındaki en yüksek puanlı eylemi seçerek bildiği en iyi yolu **kullanır (exploitation)**.
+- **`epsilon` olasılıkla:** Rastgele eylem seçilir (exploration)
+  - Ajan, Q-tablosuna bakmaksızın rastgele bir eylem yapar
+  - Bu, yeni durumları ve eylemleri keşfetmesini sağlar
+- **`1-epsilon` olasılıkla:** En yüksek Q-değerli eylem seçilir (exploitation)
+  - Ajan, mevcut bilgisine göre en iyi eylemi seçer
+  - Öğrenilen politikanın performansını optimize eder
 
-Eğitimin başında `epsilon` yüksektir (ajan çok meraklıdır), zamanla azalır (ajan öğrendiklerine daha çok güvenmeye başlar).
+### Epsilon Decay
 
-Bu basit ama güçlü mekanizmalarla, bir Q-Tablosu ajanı, karmaşık bir sinir ağına ihtiyaç duymadan, dünyayı deneyimleyerek ve sonuçları bir tabloya dikkatlice not ederek en iyi yolu bulmayı öğrenir.
+Eğitim sürecinde epsilon zamanla azalır (decay):
+- **Başlangıçta:** `epsilon = 1.0` (tamamen rastgele)
+- **Eğitim ilerledikçe:** `epsilon` azalır (örn: `epsilon = max(0.1, 1.0 - episode/1000)`)
+- **Sonunda:** `epsilon ≈ 0.1` (çoğunlukla öğrenilen politikayı kullan)
+
+Bu yaklaşım sayesinde ajan:
+- İlk aşamada ortamı keşfeder
+- Öğrendikçe öğrenilen politikayı uygular
+- Ancak küçük bir olasılıkla yeni yollar keşfetmeye devam eder

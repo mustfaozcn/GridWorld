@@ -84,5 +84,4 @@ Attention, GridWorld problemini çözerken:
 
 MLP gibi "tüm bilgilere eşit önem verir" demez. CNN gibi "lokal desenlere odaklanır" demez. LSTM gibi "geçmişi hatırlar" demez. Attention, **"şu an hangi bilgi önemli?"** diye sorar ve ona göre odaklanır.
 
-Umarım bu yolculuk, bir Attention mekanizmasının zihninde neler olup bittiğini daha sezgisel bir şekilde anlamana yardımcı olmuştur!
 

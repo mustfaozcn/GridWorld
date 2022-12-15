@@ -10,15 +10,15 @@ MLP, dünyayı sadece iki sayı olarak görür: `(x, y)` koordinatları. CNN ise
 
 CNN'in ilk yaptığı şey, GridWorld'i 5x5 piksellik bir görüntüye dönüştürmektir. Ama sıradan bir görüntü değil - **3 kanallı** bir görüntü! Her kanal farklı bir bilgi taşır:
 
-- **Kanal 0 - Ajan Kanallı:** Ajanın bulunduğu hücre parlak beyaz (1.0), diğer hücreler siyah (0.0). Sanki bir projektör, ajanın üzerine ışık tutuyor.
-- **Kanal 1 - Hedef Kanallı:** Hedefin bulunduğu hücre parlak beyaz (1.0), diğerleri siyah. Bu, "hedef orada!" diye bağıran bir işaret lambası gibi.
-- **Kanal 2 - Mesafe Kanallı:** Her hücreden hedefe olan mesafeyi gösteren bir ısı haritası. Hedefe yakın yerler koyu, uzak yerler açık. Bu, ajanın "yön hissini" kazanmasına yardımcı olur.
+- **Kanal 0 - Ajan Kanallı:** Ajanın bulunduğu hücre 1.0, diğer hücreler 0.0 değerine sahiptir. Ajanın konumunu binary olarak kodlar.
+- **Kanal 1 - Hedef Kanallı:** Hedefin bulunduğu hücre 1.0, diğer hücreler 0.0 değerine sahiptir. Hedefin konumunu binary olarak kodlar.
+- **Kanal 2 - Mesafe Kanallı:** Her hücreden hedefe olan mesafeyi gösterir. Normalize edilmiş mesafe değerleri, ajanın hedefe göre konumlandırmasını kodlar.
 
-Bu üç kanal birleştiğinde, CNN için zengin bir bilgi kaynağı oluşur. Artık CNN sadece "ajan (2,1) konumunda" demekle kalmaz; "ajan sağ üstte, hedef sağ altta, aralarında 5 birimlik mesafe var" gibi çok daha detaylı bir anlayışa sahip olur.
+Bu üç kanal birleştiğinde, CNN için uzamsal ilişkileri kodlayan zengin bir temsil oluşur. CNN, sadece ajanın koordinatlarını değil, aynı zamanda hedefle olan uzamsal ilişkiyi ve mesafe bilgisini de işleyebilir.
 
 ### Convolution: Filtreler ile Tarama
 
-MLP'de her nöron tüm görüntüye bakardı. CNN ise farklı bir strateji kullanır: **Küçük filtreler (kernels)** ile görüntüyü tarar. Bu filtreler, tıpkı parmak izi tanıma sistemlerindeki gibi, lokal desenleri yakalar.
+MLP'de her nöron tüm görüntüye bağlıdır. CNN ise **küçük filtreler (kernels)** kullanarak lokal desenleri yakalar. Bu filtreler, görüntü üzerinde kayarak geçer ve lokal özellikleri çıkarır.
 
 Her filtre 3x3'lük küçük bir penceredir. Bu pencere görüntü üzerinde kayarak geçer ve her pozisyonda bir işlem yapar:
 
@@ -132,7 +132,6 @@ CNN, GridWorld problemini çözerken:
 - **Verimli öğrenir:** Parametre paylaşımı sayesinde az veri ile çok şey öğrenir.
 - **Genelleme yapar:** MaxPooling sayesinde farklı pozisyonlarda aynı stratejiyi uygular.
 
-MLP gibi "tüm görüntüye aynı anda bakar ve her şeyi karıştırır" demez. CNN, bir dedektif gibi, küçük ipuçlarını yakalar, bunları birleştirir ve sonunda "ajan hedefe ulaşmak için sağa gitmeli" gibi bir sonuca varır.
+CNN, MLP'nin tam lineer kombinasyon yaklaşımından farklı olarak, lokal desenleri yakalar, bunları hiyerarşik olarak birleştirir ve optimal eylem kararını üretir.
 
-Umarım bu yolculuk, bir CNN'in zihninde neler olup bittiğini ve neden görüntü formatını tercih ettiğini daha sezgisel bir şekilde anlamana yardımcı olmuştur!
 

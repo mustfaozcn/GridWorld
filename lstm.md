@@ -164,7 +164,6 @@ LSTM, GridWorld problemini çözerken:
 - **Döngü önleme:** Geçmiş hareketleri analiz ederek aynı yere tekrar gitmekten kaçınır.
 - **Uzun vadeli strateji:** Cell state sayesinde karmaşık yollar öğrenir.
 
-MLP gibi "sadece mevcut duruma bakar ve karar verir" demez. CNN gibi "görüntü formatında düşünür" demez. LSTM, bir **insan gibi**, geçmişi hatırlar, öğrenir ve geleceği planlar.
+LSTM, MLP ve CNN'den farklı olarak, sadece mevcut durumu değil, geçmiş durumları da kullanarak karar verir. Bu sayede zaman bağımlı desenleri öğrenir ve uzun vadeli stratejiler geliştirir.
 
-Umarım bu yolculuk, bir LSTM'in zihninde neler olup bittiğini ve neden hafıza mekanizmasına ihtiyaç duyduğunu daha sezgisel bir şekilde anlamana yardımcı olmuştur!
 
